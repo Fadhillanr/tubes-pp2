@@ -1,21 +1,19 @@
 package view;
 
-import model.User;
-import model.WasteType;
-import model.WasteCategory;
-import javax.swing.*;
+import controller.WasteCategoryController;
+import controller.WasteTypeController;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
-import controller.WasteTypeController;
-import controller.WasteCategoryController;
-import java.util.ArrayList;
+import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
-import javax.swing.table.DefaultTableCellRenderer;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import model.User;
+import model.WasteCategory;
+import model.WasteType;
 
 public class MainFrame extends JFrame {
 
@@ -33,12 +31,12 @@ public class MainFrame extends JFrame {
     // Warna dan font yang konsisten
     private static final Color PRIMARY_COLOR = new Color(50, 157, 156); // #329D9C
     private static final Color BACKGROUND_COLOR = new Color(207, 244, 210); // #CFF4D2
-    private static final Color TABLE_HEADER_COLOR = new Color(30, 100, 100); // Warna header tabel lebih gelap
-    private static final Color TABLE_CELL_COLOR = new Color(240, 240, 240); // Warna cell tabel agak abu-abu
-    private static final Color TABLE_CELL_SELECTED_COLOR = new Color(200, 200, 200); // Warna sel saat diklik
-    private static final Color BUTTON_TEXT_COLOR = new Color(50, 50, 50); // Dark gray for button text
-    private static final Font TABLE_FONT = new Font("Arial", Font.PLAIN, 14); // Font untuk tabel
-    private static final Font FOOTER_FONT = new Font("Arial", Font.PLAIN, 12); // Font untuk footer
+    private static final Color TABLE_HEADER_COLOR = new Color(30, 100, 100);
+    private static final Color TABLE_CELL_COLOR = new Color(240, 240, 240);
+    private static final Color TABLE_CELL_SELECTED_COLOR = new Color(200, 200, 200);
+    private static final Color BUTTON_TEXT_COLOR = new Color(50, 50, 50);
+    private static final Font TABLE_FONT = new Font("Arial", Font.PLAIN, 14);
+    private static final Font FOOTER_FONT = new Font("Arial", Font.PLAIN, 12);
 
 
     public MainFrame(User user) {
@@ -132,7 +130,7 @@ public class MainFrame extends JFrame {
         if (currentUser != null && currentUser.getRole().equals("ADMIN")) {
             return createAdminDashboard();
         } else {
-            return createUserDashboard(); // Memanggil metode yang benar
+            return createUserDashboard();
         }
     }
 

@@ -50,15 +50,6 @@ public class DatabaseConnection {
                     + "3. Database 'ewaste_db' exists",
                     "Database Error",
                     JOptionPane.ERROR_MESSAGE);
-        } finally {
-            try {
-                if (conn != null) {
-                    conn.commit();
-                }
-            } catch (SQLException e) {
-                System.out.println("Error pada database connection commit" + e.getMessage());
-                e.printStackTrace();
-            }
         }
         return conn;
     }
@@ -114,7 +105,9 @@ public class DatabaseConnection {
                     + "email VARCHAR(100) UNIQUE NOT NULL, "
                     + "phone_number VARCHAR(15) UNIQUE NOT NULL, "
                     + "address TEXT, "
+                    + "profile_image_path VARCHAR(255), "
                     + "role ENUM('ADMIN','USER') DEFAULT 'USER', "
+                    + "is_active BOOLEAN DEFAULT TRUE, "
                     + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
                     + ")";
             stmt.executeUpdate(createUsersTable);
@@ -134,20 +127,21 @@ public class DatabaseConnection {
                     + "category_id INT NOT NULL, "
                     + "name VARCHAR(100) NOT NULL, "
                     + "description TEXT, "
-                    + "weight VARCHAR(50) NOT NULL, "
+                     +  "weight VARCHAR(50) NOT NULL, "
                     + "unit VARCHAR(20) NOT NULL, "
                     + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
                     + "FOREIGN KEY (category_id) REFERENCES waste_categories(id)"
                     + ")";
             stmt.executeUpdate(createTypesTable);
 
-            // Create otp_records table
-            String createOTPTable = "CREATE TABLE IF NOT EXISTS otp_records ("
+           // Create otp_records table
+             String createOTPTable = "CREATE TABLE IF NOT EXISTS otp_records ("
                     + "id INT PRIMARY KEY AUTO_INCREMENT, "
-                    + "phone_number VARCHAR(15) NOT NULL, "
+                    + "email VARCHAR(255) NOT NULL, "
                     + "otp_code VARCHAR(6) NOT NULL, "
                     + "is_used BOOLEAN DEFAULT FALSE, "
-                    + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+                    + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
+                     + "expired_at TIMESTAMP"
                     + ")";
             stmt.executeUpdate(createOTPTable);
 

@@ -8,13 +8,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import model.User;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
-import model.WasteCategory;
+import model.User;
+import java.time.LocalDate;
 
 public class UserController {
 
@@ -119,66 +117,117 @@ public class UserController {
 
     // Updated updateProfile method with better error handling
     public boolean updateProfile(User user, File newProfileImage) {
-        PreparedStatement pstmt = null;
-        try {
-            String imagePath = null;
-            if (newProfileImage != null) {
-                try {
-                    imagePath = saveProfileImage(newProfileImage, user.getId());
+     PreparedStatement pstmt = null;
+     ResultSet rs = null;
+     try {
+        
+         // Cek duplikasi username
+         if (!user.getUsername().equals(getCurrentUsername(user.getId()))){
+         String checkUser = "SELECT username FROM users "
+                 + "WHERE username = ? ";
+         pstmt = conn.prepareStatement(checkUser);
+         pstmt.setString(1, user.getUsername());
+          rs = pstmt.executeQuery();
 
-                    // Delete old profile image if it exists
-                    if (user.getProfileImagePath() != null) {
-                        File oldImage = new File(user.getProfileImagePath());
-                        if (oldImage.exists() && oldImage.isFile()) {
-                            oldImage.delete();
-                        }
-                    }
-                } catch (IOException e) {
-                    throw new SQLException("Failed to process profile image: " + e.getMessage());
-                }
-            }
-
-            String sql = "UPDATE users SET email = ?, phone_number = ?, address = ?, profile_image_path = ? WHERE id = ?";
-            pstmt = conn.prepareStatement(sql);
-            pstmt.setString(1, user.getEmail());
-            pstmt.setString(2, user.getPhoneNumber());
-            pstmt.setString(3, user.getAddress());
-            pstmt.setString(4, imagePath != null ? imagePath : user.getProfileImagePath());
-            pstmt.setInt(5, user.getId());
-
-            int result = pstmt.executeUpdate();
-            conn.commit();
-            if (result > 0) {
-                user.setProfileImagePath(imagePath != null ? imagePath : user.getProfileImagePath());
-                return true;
-            }
-            return false;
-
-        } catch (SQLException e) {
-            try {
-                if (conn != null) {
-                    conn.rollback();
-                }
-            } catch (SQLException ex) {
-                e.printStackTrace();
-            }
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Failed to update profile: " + e.getMessage());
-            return false;
-        } finally {
-            try {
-                if (pstmt != null) {
-                    pstmt.close();
-                }
-                if (conn != null) {
-                    conn.setAutoCommit(true);
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+         if (rs.next()) {
+             JOptionPane.showMessageDialog(null, "Username already exists!", "Update Error", JOptionPane.ERROR_MESSAGE);
+             return false;
+         }
         }
-    }
+
+         String imagePath = null;
+         if (newProfileImage != null) {
+             try {
+                 imagePath = saveProfileImage(newProfileImage, user.getId());
+
+                 // Delete old profile image if it exists
+                 if (user.getProfileImagePath() != null) {
+                     File oldImage = new File(user.getProfileImagePath());
+                     if (oldImage.exists() && oldImage.isFile()) {
+                         oldImage.delete();
+                     }
+                 }
+             } catch (IOException e) {
+                 throw new SQLException("Failed to process profile image: " + e.getMessage());
+             }
+         }
+
+          String sql = "UPDATE users SET username = ?, email = ?, phone_number = ?, address = ?, profile_image_path = ?, birthdate = ? WHERE id = ?";
+         pstmt = conn.prepareStatement(sql);
+         pstmt.setString(1, user.getUsername());
+         pstmt.setString(2, user.getEmail());
+         pstmt.setString(3, user.getPhoneNumber());
+         pstmt.setString(4, user.getAddress());
+         pstmt.setString(5, imagePath != null ? imagePath : user.getProfileImagePath());
+         pstmt.setDate(6, user.getBirthdate() != null ? Date.valueOf(user.getBirthdate()) : null);
+         pstmt.setInt(7, user.getId());
+
+         int result = pstmt.executeUpdate();
+         conn.commit();
+         if (result > 0) {
+             user.setProfileImagePath(imagePath != null ? imagePath : user.getProfileImagePath());
+             return true;
+         }
+         return false;
+
+     } catch (SQLException e) {
+         try {
+             if (conn != null) {
+                 conn.rollback();
+             }
+         } catch (SQLException ex) {
+             e.printStackTrace();
+         }
+         e.printStackTrace();
+         JOptionPane.showMessageDialog(null, "Failed to update profile: " + e.getMessage());
+         return false;
+     } finally {
+           try {
+             if (rs != null) {
+                 rs.close();
+             }
+             if (pstmt != null) {
+                 pstmt.close();
+             }
+              if (conn != null) {
+                 conn.setAutoCommit(true);
+                 conn.close();
+             }
+         } catch (SQLException e) {
+             e.printStackTrace();
+         }
+     }
+ }
+
+ private String getCurrentUsername(int userId) {
+     PreparedStatement pstmt = null;
+     ResultSet rs = null;
+     String username = null;
+     try {
+         String sql = "SELECT username FROM users WHERE id = ?";
+         pstmt = conn.prepareStatement(sql);
+         pstmt.setInt(1, userId);
+         rs = pstmt.executeQuery();
+         if (rs.next()) {
+            username = rs.getString("username");
+         }
+         return username;
+     } catch (SQLException e) {
+         e.printStackTrace();
+         return null;
+     } finally {
+          try {
+             if (rs != null) {
+                 rs.close();
+             }
+             if (pstmt != null) {
+                 pstmt.close();
+             }
+         } catch (SQLException e) {
+             e.printStackTrace();
+         }
+     }
+ }
 
     public User login(String username, String password) {
         PreparedStatement pstmt = null;
@@ -201,6 +250,10 @@ public class UserController {
                 user.setAddress(rs.getString("address"));
                 user.setProfileImagePath(rs.getString("profile_image_path"));
                 user.setRole(rs.getString("role"));
+                Date birthdate = rs.getDate("birthdate");
+                if (birthdate != null) {
+                   user.setBirthdate(birthdate.toLocalDate());
+                }
                 // Jangan set password untuk keamanan
                 return user;
             }
@@ -261,8 +314,8 @@ public class UserController {
             }
 
             // Insert new user
-            String sql = "INSERT INTO users (username, password, email, phone_number, address, role, is_active) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO users (username, password, email, phone_number, address, role, is_active, birthdate) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             pstmt = conn.prepareStatement(sql);
 
             pstmt.setString(1, user.getUsername());
@@ -272,6 +325,8 @@ public class UserController {
             pstmt.setString(5, user.getAddress());
             pstmt.setString(6, user.getRole());
             pstmt.setBoolean(7, user.isActive());
+             pstmt.setDate(8, user.getBirthdate() != null ? Date.valueOf(user.getBirthdate()) : null);
+
 
             int result = pstmt.executeUpdate();
             conn.commit();
