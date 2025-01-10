@@ -35,9 +35,12 @@ public class LoginFrame extends JFrame {
         passwordField = new JPasswordField(20);
         loginButton = new JButton("Login");
         registerButton = new JButton("Register");
-        forgotPasswordLabel = new JLabel("Forgot Password?");
-        forgotPasswordLabel.setForeground(Color.BLUE);
+        
+        // Updated forgot password label with underline
+        forgotPasswordLabel = new JLabel("<html><u>Forgot Password?</u></html>");
+        forgotPasswordLabel.setForeground(new Color(32, 80, 114)); // #205072
         forgotPasswordLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
         errorLabel = new JLabel();
         errorLabel.setForeground(Color.RED);
         errorLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -47,29 +50,64 @@ public class LoginFrame extends JFrame {
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+        mainPanel.setBackground(new Color(207, 244, 210)); // #CFF4D2
 
         JLabel titleLabel = new JLabel("E-Waste Management System");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        titleLabel.setForeground(new Color(50, 157, 156)); // #329D9C
+        titleLabel. setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JPanel formPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
 
+        // Updated labels with new font and color
+        JLabel usernameLabel = new JLabel("Username:");
+        usernameLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        usernameLabel.setForeground(new Color(86, 197, 150)); // #56c596
+        
+        JLabel passwordLabel = new JLabel("Password:");
+        passwordLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        passwordLabel.setForeground(new Color(86, 197, 150)); // #56c596
+        
         gbc.gridx = 0;
         gbc.gridy = 0;
-        formPanel.add(new JLabel("Username:"), gbc);
+        formPanel.add(usernameLabel, gbc);
         gbc.gridx = 1;
-        formPanel.add(usernameField, gbc);
+        
+        // Adding rounded box behind username field
+        JPanel usernamePanel = new JPanel();
+        usernamePanel.setBackground(new Color(50, 157, 156)); // #329D9C
+        usernamePanel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 5, true));
+        usernamePanel.setLayout(new BorderLayout());
+        usernamePanel.add(usernameField, BorderLayout.CENTER);
+        formPanel.add(usernamePanel, gbc);
 
         gbc.gridx = 0;
         gbc.gridy = 1;
-        formPanel.add(new JLabel("Password:"), gbc);
+        formPanel.add(passwordLabel, gbc);
         gbc.gridx = 1;
-        formPanel.add(passwordField, gbc);
+
+        // Adding rounded box behind password field
+        JPanel passwordPanel = new JPanel();
+        passwordPanel.setBackground(new Color(50, 157, 156)); // #329D9C
+        passwordPanel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 5, true));
+        passwordPanel.setLayout(new BorderLayout());
+        passwordPanel.add(passwordField, BorderLayout.CENTER);
+        formPanel.add(passwordPanel, gbc);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        
+        // Set font for buttons
+        loginButton.setFont(new Font("Arial", Font.BOLD, 14));
+        loginButton.setBackground(new Color(123, 228, 149)); // Lighter shade for visibility
+        loginButton.setForeground(new Color(32, 80, 114)); // #205072
+        
+        registerButton.setFont(new Font("Arial", Font.BOLD, 14));
+        registerButton.setBackground(new Color(123, 228, 149)); // Lighter shade for visibility
+        registerButton.setForeground(new Color(32, 80, 114)); // #205072
+        
         buttonPanel.add(loginButton);
         buttonPanel.add(registerButton);
 
@@ -87,16 +125,19 @@ public class LoginFrame extends JFrame {
         mainPanel.add(Box.createVerticalStrut(10));
 
         JPanel forgotPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        
+        // Set font for forgot password label
+        forgotPasswordLabel.setFont(new Font("Arial", Font.BOLD, 14));
         forgotPanel.add(forgotPasswordLabel);
         mainPanel.add(forgotPanel);
 
         add(mainPanel);
 
-        mainPanel.setBackground(Color.WHITE);
-        formPanel.setBackground(Color.WHITE);
-        buttonPanel.setBackground(Color.WHITE);
-        forgotPanel.setBackground(Color.WHITE);
-        errorPanel.setBackground(Color.WHITE);
+        mainPanel.setBackground(new Color(207, 244, 210)); // #CFF4D2
+        formPanel.setBackground(new Color(207, 244, 210)); // #CFF4D2
+        buttonPanel.setBackground(new Color(207, 244, 210)); // #CFF4D2
+        forgotPanel.setBackground(new Color(207, 244, 210)); // #CFF4D2
+        errorPanel.setBackground(new Color(207, 244, 210)); // #CFF4D2
 
         loginButton.setPreferredSize(new Dimension(100, 30));
         registerButton.setPreferredSize(new Dimension(100, 30));

@@ -16,16 +16,16 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class ProfileSettingsDialog extends JDialog {
 
     private static final int IMAGE_SIZE = 150;
-    private static final Color PRIMARY_COLOR = new Color(70, 130, 180);
-    private static final Color BUTTON_COLOR = new Color(240, 240, 240); // Light gray
-    private static final Color BUTTON_HOVER_COLOR = new Color(220, 220, 220); // Lighter gray
+    private static final Color PRIMARY_COLOR = new Color(50, 157, 156); // #329D9C
+    private static final Color BUTTON_COLOR = new Color(123, 228, 149); // Lighter shade for visibility
+    private static final Color BUTTON_HOVER_COLOR = new Color(220, 220, 220);
     private static final Color ERROR_COLOR = new Color(220, 53, 69);
     private static final Color SUCCESS_COLOR = new Color(40, 167, 69);
+    private static final Color BACKGROUND_COLOR = new Color(207, 244, 210); // #CFF4D2
 
     private UserController userController;
-    private User currentUser;
+    private User currentUser ;
     private File selectedImageFile;
-    private BufferedImage currentProfileImage;
 
     // UI Components
     private JLabel profileImageLabel;
@@ -41,7 +41,7 @@ public class ProfileSettingsDialog extends JDialog {
     public ProfileSettingsDialog(JFrame parent, User user) {
         super(parent, "Profile Settings", true);
         this.userController = new UserController();
-        this.currentUser = user;
+        this.currentUser  = user;
         initComponents();
         loadProfileImage();
     }
@@ -49,52 +49,42 @@ public class ProfileSettingsDialog extends JDialog {
     private void initComponents() {
         setSize(500, 650);
         setLocationRelativeTo(getOwner());
+        setMinimumSize(new Dimension(450, 600));
+        getContentPane().setBackground(BACKGROUND_COLOR);
 
         JTabbedPane tabbedPane = createTabbedPane();
         add(tabbedPane);
-
-        // Set minimum size
-        setMinimumSize(new Dimension(450, 600));
     }
 
     private JTabbedPane createTabbedPane() {
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setFont(new Font("Arial", Font.BOLD, 12));
-
         tabbedPane.addTab("Profile", createProfilePanel());
         tabbedPane.addTab("Password", createPasswordPanel());
-
         return tabbedPane;
     }
 
     private JPanel createProfilePanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        panel.setBackground(BACKGROUND_COLOR);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        // Profile Image Section
-        JPanel imagePanel = createProfileImagePanel();
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
-        panel.add(imagePanel, gbc);
+        panel.add(createProfileImagePanel(), gbc);
 
-        // Profile Information Section
-        JPanel infoPanel = createProfileInfoPanel();
         gbc.gridy = 1;
-        panel.add(infoPanel, gbc);
+        panel.add(createProfileInfoPanel(), gbc);
 
-        // Save Button Section
-        JPanel buttonPanel = createButtonPanel();
         gbc.gridy = 2;
-        panel.add(buttonPanel, gbc);
+        panel.add(createButtonPanel(), gbc);
 
-        // Status Section
-        JPanel statusPanel = createStatusPanel();
         gbc.gridy = 3;
-        panel.add(statusPanel, gbc);
+        panel.add(createStatusPanel(), gbc);
 
         return panel;
     }
@@ -103,8 +93,8 @@ public class ProfileSettingsDialog extends JDialog {
         JPanel imagePanel = new JPanel();
         imagePanel.setLayout(new BoxLayout(imagePanel, BoxLayout.Y_AXIS));
         imagePanel.setBorder(new EmptyBorder(0, 0, 20, 0));
+        imagePanel.setBackground(BACKGROUND_COLOR);
 
-        // Profile Image
         profileImageLabel = new JLabel();
         profileImageLabel.setPreferredSize(new Dimension(IMAGE_SIZE, IMAGE_SIZE));
         profileImageLabel.setMaximumSize(new Dimension(IMAGE_SIZE, IMAGE_SIZE));
@@ -114,9 +104,9 @@ public class ProfileSettingsDialog extends JDialog {
                 new EmptyBorder(5, 5, 5, 5)
         ));
 
-        // Image Controls
         JPanel controlPanel = new JPanel();
         controlPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        controlPanel.setBackground(BACKGROUND_COLOR);
 
         JButton changeButton = createStyledButton("Change Picture");
         JButton removeButton = createStyledButton("Remove Picture");
@@ -125,7 +115,7 @@ public class ProfileSettingsDialog extends JDialog {
         removeButton.addActionListener(e -> removeProfileImage());
 
         controlPanel.add(changeButton);
-        controlPanel.add(Box.createHorizontalStrut(10));
+        controlPanel.add(Box .createHorizontalStrut(10));
         controlPanel.add(removeButton);
 
         imagePanel.add(profileImageLabel);
@@ -138,26 +128,23 @@ public class ProfileSettingsDialog extends JDialog {
     private JPanel createProfileInfoPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createTitledBorder("Personal Information"));
+        panel.setBackground(BACKGROUND_COLOR);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        // Username (non-editable)
-        addFormField(panel, "Username:", createReadOnlyField(currentUser.getUsername()), gbc, 0);
+        addFormField(panel, "Username:", createReadOnlyField(currentUser .getUsername()), gbc, 0);
 
-        // Email
         emailField = new JTextField(20);
-        emailField.setText(currentUser.getEmail());
+        emailField.setText(currentUser .getEmail());
         addFormField(panel, "Email:", emailField, gbc, 1);
 
-        // Phone
         phoneField = new JTextField(20);
-        phoneField.setText(currentUser.getPhoneNumber());
+        phoneField.setText(currentUser .getPhoneNumber());
         addFormField(panel, "Phone:", phoneField, gbc, 2);
 
-        // Address
         addressArea = new JTextArea(3, 20);
-        addressArea.setText(currentUser.getAddress());
+        addressArea.setText(currentUser .getAddress());
         addressArea.setLineWrap(true);
         addressArea.setWrapStyleWord(true);
         JScrollPane scrollPane = new JScrollPane(addressArea);
@@ -168,6 +155,7 @@ public class ProfileSettingsDialog extends JDialog {
 
     private JPanel createButtonPanel() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        panel.setBackground(BACKGROUND_COLOR);
         JButton saveButton = createStyledButton("Save Changes");
         saveButton.addActionListener(e -> saveProfile());
         JButton deleteAccountButton = createStyledButton("Delete Account");
@@ -179,16 +167,14 @@ public class ProfileSettingsDialog extends JDialog {
 
     private JPanel createStatusPanel() {
         JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(BACKGROUND_COLOR);
 
-        // Progress Bar
         uploadProgressBar = new JProgressBar(0, 100);
         uploadProgressBar.setStringPainted(true);
         uploadProgressBar.setVisible(false);
 
-        // Status Label
         statusLabel = new JLabel("");
         statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
-
         panel.add(uploadProgressBar, BorderLayout.NORTH);
         panel.add(statusLabel, BorderLayout.CENTER);
 
@@ -204,7 +190,7 @@ public class ProfileSettingsDialog extends JDialog {
         if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             selectedImageFile = fileChooser.getSelectedFile();
             try {
-                if (currentUser.validateProfileImage(selectedImageFile)) {
+                if (currentUser .validateProfileImage(selectedImageFile)) {
                     updateProfileImagePreview();
                     showStatus("Image selected successfully", true);
                 } else {
@@ -229,7 +215,6 @@ public class ProfileSettingsDialog extends JDialog {
                             Image scaledImg = img.getScaledInstance(IMAGE_SIZE, IMAGE_SIZE, Image.SCALE_SMOOTH);
                             return new ImageIcon(scaledImg);
                         }
-
                     } catch (IOException e) {
                         e.printStackTrace();
                         showStatus("Error previewing image", false);
@@ -246,7 +231,6 @@ public class ProfileSettingsDialog extends JDialog {
                         } else {
                             setDefaultProfileImage();
                         }
-
                     } catch (Exception e) {
                         profileImageLabel.setIcon(null);
                         profileImageLabel.setText("No Image");
@@ -268,7 +252,7 @@ public class ProfileSettingsDialog extends JDialog {
 
         if (response == JOptionPane.YES_OPTION) {
             selectedImageFile = null;
-            currentUser.setProfileImagePath(null);
+            currentUser .setProfileImagePath(null);
             setDefaultProfileImage();
             showStatus("Profile picture removed", true);
         }
@@ -290,7 +274,6 @@ public class ProfileSettingsDialog extends JDialog {
                 profileImageLabel.setIcon(null);
                 profileImageLabel.setText("No Image");
             }
-
         } catch (IOException e) {
             e.printStackTrace();
             profileImageLabel.setIcon(null);
@@ -299,25 +282,21 @@ public class ProfileSettingsDialog extends JDialog {
     }
 
     private void saveProfile() {
-        // Update user object with form data
-        currentUser.setEmail(emailField.getText().trim());
-        currentUser.setPhoneNumber(phoneField.getText().trim());
-        currentUser.setAddress(addressArea.getText().trim());
+        currentUser .setEmail(emailField.getText().trim());
+        currentUser .setPhoneNumber(phoneField.getText().trim());
+        currentUser .setAddress(addressArea.getText().trim());
 
-        // Show progress bar
         uploadProgressBar.setVisible(true);
         uploadProgressBar.setValue(0);
 
-        // Use SwingWorker for background processing
         SwingWorker<Boolean, Integer> worker = new SwingWorker<>() {
             @Override
             protected Boolean doInBackground() throws Exception {
-                // Simulate progress
                 for (int i = 0; i <= 100; i += 10) {
                     Thread.sleep(100);
                     publish(i);
                 }
-                return userController.updateProfile(currentUser, selectedImageFile);
+                return userController.updateProfile(currentUser , selectedImageFile);
             }
 
             @Override
@@ -352,10 +331,10 @@ public class ProfileSettingsDialog extends JDialog {
 
     private JButton createStyledButton(String text) {
         JButton button = new JButton(text);
-        button.setBackground(BUTTON_COLOR);
-        button.setForeground(Color.BLACK);
-        button.setFocusPainted(false);
         button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setBackground(BUTTON_COLOR);
+        button.setForeground(new Color(32, 80, 114)); // #205072
+        button.setFocusPainted(false);
         button.setBorder(new CompoundBorder(
                 new LineBorder(Color.GRAY, 1),
                 new EmptyBorder(8, 15, 8, 15)
@@ -403,12 +382,15 @@ public class ProfileSettingsDialog extends JDialog {
     private JPanel createPasswordPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createTitledBorder("Change Password"));
+        panel.setBackground(BACKGROUND_COLOR);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        //Old Password
+        // Old Password
         JLabel oldPassLabel = new JLabel("Old Password:");
+        oldPassLabel.setFont(new Font("Arial", Font.BOLD, 14));
+ oldPassLabel.setForeground(new Color(86, 197, 150)); // #56c596
         gbc.gridx = 0;
         gbc.gridy = 0;
         panel.add(oldPassLabel, gbc);
@@ -419,6 +401,8 @@ public class ProfileSettingsDialog extends JDialog {
 
         // New Password
         JLabel newPassLabel = new JLabel("New Password:");
+        newPassLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        newPassLabel.setForeground(new Color(86, 197, 150)); // #56c596
         gbc.gridx = 0;
         gbc.gridy = 1;
         panel.add(newPassLabel, gbc);
@@ -427,8 +411,10 @@ public class ProfileSettingsDialog extends JDialog {
         gbc.gridx = 1;
         panel.add(newPasswordField, gbc);
 
-        //Confirm New Password
+        // Confirm New Password
         JLabel confirmPassLabel = new JLabel("Confirm New Password:");
+        confirmPassLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        confirmPassLabel.setForeground(new Color(86, 197, 150)); // #56c596
         gbc.gridx = 0;
         gbc.gridy = 2;
         panel.add(confirmPassLabel, gbc);
@@ -439,6 +425,7 @@ public class ProfileSettingsDialog extends JDialog {
 
         // Button Panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.setBackground(BACKGROUND_COLOR);
         JButton changePassButton = createStyledButton("Change Password");
         changePassButton.addActionListener(e -> handleChangePassword());
         buttonPanel.add(changePassButton);
@@ -468,23 +455,21 @@ public class ProfileSettingsDialog extends JDialog {
             return;
         }
         // Check if old password matches the current user password
-        User user = userController.login(currentUser.getUsername(), oldPassword);
+        User user = userController.login(currentUser .getUsername(), oldPassword);
         if (user == null) {
             showStatus("Old password incorrect", false);
             return;
         }
-        // Implementasi reset password disini
-        boolean passwordChanged = userController.resetPassword(currentUser.getUsername(), newPassword);
+        // Implement password reset here
+        boolean passwordChanged = userController.resetPassword(currentUser .getUsername(), newPassword);
         if (passwordChanged) {
             showStatus("Password changed successfully", true);
             dispose();
             LoginFrame.getMainFrame().dispose();
             new LoginFrame().setVisible(true);
-
         } else {
             showStatus("Failed to change password. Please try again", false);
         }
-
     }
 
     private void deleteAccount() {
@@ -496,12 +481,11 @@ public class ProfileSettingsDialog extends JDialog {
         );
 
         if (response == JOptionPane.YES_OPTION) {
-            if (userController.deleteAccount(currentUser.getId())) {
+            if (userController.deleteAccount(currentUser .getId())) {
                 JOptionPane.showMessageDialog(this, "Account deleted successfully, please log in again");
                 dispose();
                 LoginFrame.getMainFrame().dispose();
                 new LoginFrame().setVisible(true);
-
             } else {
                 showStatus("Failed to delete account. Please try again", false);
             }
@@ -512,7 +496,7 @@ public class ProfileSettingsDialog extends JDialog {
         SwingWorker<ImageIcon, Void> worker = new SwingWorker<ImageIcon, Void>() {
             @Override
             protected ImageIcon doInBackground() throws Exception {
-                String imagePath = currentUser.getProfileImagePath();
+                String imagePath = currentUser .getProfileImagePath();
                 if (imagePath != null && !imagePath.isEmpty()) {
                     File imageFile = new File(imagePath);
                     if (imageFile.exists() && imageFile.isFile()) {
@@ -522,7 +506,6 @@ public class ProfileSettingsDialog extends JDialog {
                                 Image scaledImg = img.getScaledInstance(IMAGE_SIZE, IMAGE_SIZE, Image.SCALE_SMOOTH);
                                 return new ImageIcon(scaledImg);
                             }
-
                         } catch (IOException e) {
                             System.err.println("Failed to load user profile image: " + e.getMessage());
                             return null;
@@ -537,9 +520,8 @@ public class ProfileSettingsDialog extends JDialog {
                             Image scaledImg = defaultImg.getScaledInstance(IMAGE_SIZE, IMAGE_SIZE, Image.SCALE_SMOOTH);
                             return new ImageIcon(scaledImg);
                         }
-
                     } catch (IOException e) {
-                        System.err.println("Failed to load default image profile image: " + e.getMessage());
+                        System.err.println("Failed to load default profile image: " + e.getMessage());
                         return null;
                     }
                 }
@@ -565,3 +547,11 @@ public class ProfileSettingsDialog extends JDialog {
         worker.execute();
     }
 }
+
+
+
+
+
+
+
+//// oke

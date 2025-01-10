@@ -111,4 +111,12 @@ public class OTPController {
             }
         }
     }
+
+    public boolean verifyOTP(String phoneNumber, String otp) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    public boolean saveOTP(String phoneNumber, String otp) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
 }

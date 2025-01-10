@@ -72,65 +72,114 @@ public class RegistrationFrame extends JFrame {
 
         JPanel mainPanel = new JPanel(new GridBagLayout());
         mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        mainPanel.setBackground(new Color(207, 244, 210)); // #CFF4D2
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        JLabel titleLabel = new JLabel("User Registration");
+        // Center the title label and add padding
+        JLabel titleLabel = new JLabel("User  Registration");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        titleLabel.setForeground(new Color(50, 157, 156)); // #329D9C
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
+        gbc.insets = new Insets(20, 0, 20, 0); // Add padding above and below the title
         mainPanel.add(titleLabel, gbc);
 
+        gbc.insets = new Insets(5, 5, 5, 5); // Reset insets for other components
+        gbc.gridwidth = 1; // Reset gridwidth for labels
+
+        // Username
         gbc.gridx = 0;
         gbc.gridy = 1;
-        gbc.gridwidth = 1;
-        mainPanel.add(new JLabel("Username:"), gbc);
+        JLabel usernameLabel = new JLabel("Username:");
+        usernameLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        usernameLabel.setForeground(new Color(86, 197, 150)); // #56c596
+        mainPanel.add(usernameLabel, gbc);
+        
         gbc.gridx = 1;
         usernameField = new JTextField(20);
         mainPanel.add(usernameField, gbc);
 
+        // Password
         gbc.gridx = 0;
         gbc.gridy = 2;
-        mainPanel.add(new JLabel("Password:"), gbc);
+        JLabel passwordLabel = new JLabel("Password:");
+        passwordLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        passwordLabel.setForeground(new Color(86, 197, 150)); // #56c596
+        mainPanel.add(passwordLabel, gbc);
+        
         gbc.gridx = 1;
         passwordField = new JPasswordField(20);
         mainPanel.add(passwordField, gbc);
 
+        // Confirm Password
         gbc.gridx = 0;
         gbc.gridy = 3;
-        mainPanel.add(new JLabel("Confirm Password:"), gbc);
+        JLabel confirmPasswordLabel = new JLabel("Confirm Password:");
+        confirmPasswordLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        confirmPasswordLabel.setForeground(new Color(86, 197, 150)); // #56c596
+        mainPanel.add(confirmPasswordLabel, gbc);
+        
         gbc.gridx = 1;
         confirmPasswordField = new JPasswordField(20);
         mainPanel.add(confirmPasswordField, gbc);
 
+        // Email
         gbc.gridx = 0;
         gbc.gridy = 4;
-        mainPanel.add(new JLabel("Email:"), gbc);
+        JLabel emailLabel = new JLabel("Email:");
+        emailLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        emailLabel.setForeground(new Color(86, 197, 150)); // #56c596
+        mainPanel.add(emailLabel, gbc);
+        
         gbc.gridx = 1;
         emailField = new JTextField(20);
         mainPanel.add(emailField, gbc);
 
+        // Phone
         gbc.gridx = 0;
         gbc.gridy = 5;
-        mainPanel.add(new JLabel("Phone:"), gbc);
+        JLabel phoneLabel = new JLabel("Phone:");
+        phoneLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        phoneLabel.setForeground(new Color(86, 197, 150)); // #56c596
+        mainPanel.add(phoneLabel, gbc);
+        
         gbc.gridx = 1;
         phoneField = new JTextField(20);
         mainPanel.add(phoneField, gbc);
 
+        // Address
         gbc.gridx = 0;
         gbc.gridy = 6;
-        mainPanel.add(new JLabel("Address:"), gbc);
+        JLabel addressLabel = new JLabel("Address:");
+        addressLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        addressLabel.setForeground(new Color(86, 197, 150)); // #56c596
+        mainPanel.add(addressLabel, gbc);
+        
         gbc.gridx = 1;
         addressArea = new JTextArea(3, 20);
         addressArea.setLineWrap(true);
         mainPanel.add(new JScrollPane(addressArea), gbc);
 
+          // Button Panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton registerButton = new JButton("Register");
         JButton cancelButton = new JButton("Cancel");
         JButton loginButton = new JButton("Login");
+
+        // Set font size for buttons
+        Font buttonFont = new Font("Arial", Font.BOLD, 16); // Set font size to 16
+        registerButton.setFont(buttonFont);
+        cancelButton.setFont(buttonFont);
+        loginButton.setFont(buttonFont);
+
+        // Set preferred size for buttons
+        Dimension buttonSize = new Dimension(100, 40); // Set width to 120 and height to 40
+        registerButton.setPreferredSize(buttonSize);
+        cancelButton.setPreferredSize(buttonSize);
+        loginButton.setPreferredSize(buttonSize);
 
         registerButton.addActionListener(e -> handleRegistration());
         cancelButton.addActionListener(e -> handleCancel());
@@ -144,6 +193,7 @@ public class RegistrationFrame extends JFrame {
         gbc.gridy = 7;
         gbc.gridwidth = 2;
         mainPanel.add(buttonPanel, gbc);
+
 
         add(mainPanel);
     }

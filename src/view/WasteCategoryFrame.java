@@ -34,9 +34,13 @@ public class WasteCategoryFrame extends JFrame {
         // Main panel
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        // Changed the background color to match the reset password style.
+        mainPanel.setBackground(new Color(207, 244, 210));  
 
         // Form panel
         JPanel formPanel = new JPanel(new GridBagLayout());
+        // Changed the background color to match the reset password style.
+        formPanel.setBackground(new Color(207, 244, 210));  
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
@@ -44,21 +48,36 @@ public class WasteCategoryFrame extends JFrame {
         // Name field
         gbc.gridx = 0;
         gbc.gridy = 0;
-        formPanel.add(new JLabel("Name:"), gbc);
+        JLabel nameLabel = new JLabel("Name:");
+        nameLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        formPanel.add(nameLabel, gbc);
 
         gbc.gridx = 1;
         nameField = new JTextField(20);
-        formPanel.add(nameField, gbc);
+         formPanel.add(nameField, gbc);
 
         // Buttons panel
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.gridwidth = 2;
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        // Changed the background color to match the reset password style.
+        buttonPanel.setBackground(new Color(207, 244, 210));  
 
         addButton = new JButton("Add");
+        addButton.setFont(new Font("Arial", Font.BOLD, 14));
+        addButton.setForeground(Color.BLACK);
+        addButton.setBackground(new Color(0, 153, 51)); // Warna hijau
+
         editButton = new JButton("Edit");
+        editButton.setFont(new Font("Arial", Font.BOLD, 14));
+        editButton.setForeground(Color.BLACK);
+        editButton.setBackground(new Color(0, 153, 51)); // Warna hijau
+
         deleteButton = new JButton("Delete");
+        deleteButton.setFont(new Font("Arial", Font.BOLD, 14));
+        deleteButton.setForeground(Color.BLACK);
+        deleteButton.setBackground(new Color(0, 153, 51)); // Warna hijau
 
         buttonPanel.add(addButton);
         buttonPanel.add(editButton);
@@ -102,11 +121,8 @@ public class WasteCategoryFrame extends JFrame {
         int selectedRow = categoryTable.getSelectedRow();
         if (selectedRow != -1) {
             String name = (String) tableModel.getValueAt(selectedRow, 1);
-
-            // Set values in form fields
             nameField.setText(name);
         }
-
     }
 
     private void loadCategories() {
@@ -178,7 +194,7 @@ public class WasteCategoryFrame extends JFrame {
             return;
         }
 
-        int id = (int) tableModel.getValueAt(selectedRow, 0);
+        int id = (int) tableModel.getValueAt (selectedRow, 0);
 
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Are you sure you want to delete this category?",
