@@ -64,7 +64,7 @@ public class WasteTypeFrame extends JFrame {
         // Name field
         gbc.gridx = 0;
         gbc.gridy = 1;
-        formPanel.add(new JLabel("Name:"), gbc);
+        formPanel.add (new JLabel("Name:"), gbc);
 
         gbc.gridx = 1;
         nameField = new JTextField(20);
@@ -128,6 +128,10 @@ public class WasteTypeFrame extends JFrame {
         mainPanel.add(formPanel, BorderLayout.NORTH);
         mainPanel.add(scrollPane, BorderLayout.CENTER);
 
+        // Set background color to (207, 244, 210)
+        mainPanel.setBackground(new Color(207, 244, 210));  
+        formPanel.setBackground(new Color(207, 244, 210));  
+
         // Add action listeners
         addButton.addActionListener(e -> addWasteType());
         editButton.addActionListener(e -> editWasteType());
@@ -178,7 +182,6 @@ public class WasteTypeFrame extends JFrame {
             weightField.setText(weight);
             unitField.setText(unit);
         }
-
     }
 
     private void loadCategories() {
@@ -242,7 +245,7 @@ public class WasteTypeFrame extends JFrame {
                 JOptionPane.showMessageDialog(this, "Failed to add waste type");
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Invalid weight format" + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Invalid weight format: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -281,7 +284,7 @@ public class WasteTypeFrame extends JFrame {
                 JOptionPane.showMessageDialog(this, "Failed to update waste type");
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Invalid weight format" + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Invalid weight format: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -322,7 +325,6 @@ public class WasteTypeFrame extends JFrame {
             return false;
         }
         return true;
-
     }
 
     private void clearForm() {
