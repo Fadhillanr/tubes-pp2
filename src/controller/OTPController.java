@@ -2,7 +2,11 @@ package controller;
 
 import model.OTPRecord;
 import java.sql.*;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Random;
+import javax.swing.JOptionPane;
 
 public class OTPController {
 
@@ -23,14 +27,28 @@ public class OTPController {
     // Create new otp record
     public boolean create(OTPRecord otpRecord) {
         PreparedStatement pstmt = null;
+
+        System.out.println("Email sebelum disimpan ke database: " + otpRecord.getEmail());
+        System.out.println("OTP Code: " + otpRecord.getOtpCode());
+        // Validasi panjang email sebelum penyimpanan
+        if (otpRecord.getEmail().length() > 255) {
+            System.err.println("Email is too long. Please use a shorter email");
+            return false;
+        }
+         // Set expired_at to 5 minutes from now
+         LocalDateTime now = LocalDateTime.now();
+         LocalDateTime expiredAt = now.plusMinutes(5);
+         Timestamp expiredAtTimestamp = Timestamp.valueOf(expiredAt);
+
         try {
-            String sql = "INSERT INTO otp_records (email, otp_code) "
-                    + "VALUES (?, ?)";
+            String sql = "INSERT INTO otp_records (email, otp_code, expired_at) "
+                    + "VALUES (?, ?, ?)";
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, otpRecord.getEmail());
             pstmt.setString(2, otpRecord.getOtpCode());
+             pstmt.setTimestamp(3, expiredAtTimestamp);
             int result = pstmt.executeUpdate();
-            conn.commit();
+            conn.commit(); // Commit after insert
             if (result > 0) {
                 return true;
             } else {
@@ -38,7 +56,9 @@ public class OTPController {
             }
 
         } catch (SQLException e) {
+            System.err.println("SQL Error: " + e.getMessage());
             e.printStackTrace();
+
             return false;
         } finally {
             try {
@@ -46,6 +66,7 @@ public class OTPController {
                     pstmt.close();
                 }
             } catch (SQLException e) {
+                System.err.println("SQL Error: " + e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -56,7 +77,7 @@ public class OTPController {
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         try {
-            String sql = "SELECT * FROM otp_records WHERE email = ? AND is_used = false ORDER BY created_at DESC LIMIT 1";
+            String sql = "SELECT * FROM otp_records WHERE email = ? AND is_used = false AND expired_at > NOW() ORDER BY created_at DESC LIMIT 1";
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, email);
             rs = pstmt.executeQuery();
@@ -68,6 +89,7 @@ public class OTPController {
                 otpRecord.setOtpCode(rs.getString("otp_code"));
                 otpRecord.setUsed(rs.getBoolean("is_used"));
                 otpRecord.setCreatedAt(rs.getTimestamp("created_at"));
+                 otpRecord.setExpiredAt(rs.getTimestamp("expired_at"));
                 return otpRecord;
             }
             return null;
@@ -96,7 +118,7 @@ public class OTPController {
             pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, id);
             int result = pstmt.executeUpdate();
-            conn.commit();
+            conn.commit(); // Commit after update
             return result > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -111,12 +133,18 @@ public class OTPController {
             }
         }
     }
-
-    public boolean verifyOTP(String phoneNumber, String otp) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    //Save OTP and return boolean
+    public boolean saveOTP(String email, String otp){
+      OTPRecord otpRecord = new OTPRecord(email, otp);
+      return create(otpRecord);
     }
 
-    public boolean saveOTP(String phoneNumber, String otp) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public boolean verifyOTP(String email, String otp){
+      OTPRecord otpRecord = getOTPByEmail(email);
+        if (otpRecord != null && otpRecord.getOtpCode().equals(otp)) {
+          updateToUsed(otpRecord.getId());
+          return true;
+        }
+        return false;
     }
 }

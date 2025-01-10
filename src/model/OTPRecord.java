@@ -10,6 +10,7 @@ public class OTPRecord {
     private String otpCode;
     private boolean isUsed;
     private Date createdAt;
+    private Date expiredAt;
 
     public OTPRecord() {
         this.isUsed = false;
@@ -60,5 +61,13 @@ public class OTPRecord {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = new Date(createdAt.getTime());
+    }
+
+    public Date getExpiredAt() {
+        return expiredAt;
+    }
+
+    public void setExpiredAt(Timestamp expiredAt) {
+        this.expiredAt = new Date(expiredAt.getTime());
     }
 }

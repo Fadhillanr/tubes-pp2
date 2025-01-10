@@ -12,6 +12,10 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
+import com.toedter.calendar.JDateChooser;
 
 public class ProfileSettingsDialog extends JDialog {
 
@@ -24,24 +28,27 @@ public class ProfileSettingsDialog extends JDialog {
     private static final Color BACKGROUND_COLOR = new Color(207, 244, 210); // #CFF4D2
 
     private UserController userController;
-    private User currentUser ;
+    private User currentUser;
     private File selectedImageFile;
+    private BufferedImage currentProfileImage;
 
     // UI Components
     private JLabel profileImageLabel;
     private JProgressBar uploadProgressBar;
     private JLabel statusLabel;
+    private JTextField usernameField;
     private JTextField emailField;
     private JTextField phoneField;
     private JTextArea addressArea;
     private JPasswordField oldPasswordField;
     private JPasswordField newPasswordField;
     private JPasswordField confirmPasswordField;
+     private JDateChooser birthdateChooser;
 
     public ProfileSettingsDialog(JFrame parent, User user) {
         super(parent, "Profile Settings", true);
         this.userController = new UserController();
-        this.currentUser  = user;
+        this.currentUser = user;
         initComponents();
         loadProfileImage();
     }
@@ -115,7 +122,7 @@ public class ProfileSettingsDialog extends JDialog {
         removeButton.addActionListener(e -> removeProfileImage());
 
         controlPanel.add(changeButton);
-        controlPanel.add(Box .createHorizontalStrut(10));
+        controlPanel.add(Box.createHorizontalStrut(10));
         controlPanel.add(removeButton);
 
         imagePanel.add(profileImageLabel);
@@ -133,22 +140,32 @@ public class ProfileSettingsDialog extends JDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        addFormField(panel, "Username:", createReadOnlyField(currentUser .getUsername()), gbc, 0);
+        usernameField = new JTextField(20);
+        usernameField.setText(currentUser.getUsername());
+        addFormField(panel, "Username:", usernameField, gbc, 0);
 
         emailField = new JTextField(20);
-        emailField.setText(currentUser .getEmail());
+        emailField.setText(currentUser.getEmail());
         addFormField(panel, "Email:", emailField, gbc, 1);
 
         phoneField = new JTextField(20);
-        phoneField.setText(currentUser .getPhoneNumber());
+        phoneField.setText(currentUser.getPhoneNumber());
         addFormField(panel, "Phone:", phoneField, gbc, 2);
 
+         birthdateChooser = new JDateChooser();
+         birthdateChooser.setDateFormatString("yyyy-MM-dd");
+           if (currentUser.getBirthdate() != null) {
+            Date date = Date.from(currentUser.getBirthdate().atStartOfDay(ZoneId.systemDefault()).toInstant());
+            birthdateChooser.setDate(date);
+        }
+        addFormField(panel, "Birthdate:", birthdateChooser, gbc, 3);
+
         addressArea = new JTextArea(3, 20);
-        addressArea.setText(currentUser .getAddress());
+        addressArea.setText(currentUser.getAddress());
         addressArea.setLineWrap(true);
         addressArea.setWrapStyleWord(true);
         JScrollPane scrollPane = new JScrollPane(addressArea);
-        addFormField(panel, "Address:", scrollPane, gbc, 3);
+        addFormField(panel, "Address:", scrollPane, gbc, 4);
 
         return panel;
     }
@@ -190,7 +207,7 @@ public class ProfileSettingsDialog extends JDialog {
         if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             selectedImageFile = fileChooser.getSelectedFile();
             try {
-                if (currentUser .validateProfileImage(selectedImageFile)) {
+                if (currentUser.validateProfileImage(selectedImageFile)) {
                     updateProfileImagePreview();
                     showStatus("Image selected successfully", true);
                 } else {
@@ -252,7 +269,7 @@ public class ProfileSettingsDialog extends JDialog {
 
         if (response == JOptionPane.YES_OPTION) {
             selectedImageFile = null;
-            currentUser .setProfileImagePath(null);
+            currentUser.setProfileImagePath(null);
             setDefaultProfileImage();
             showStatus("Profile picture removed", true);
         }
@@ -282,9 +299,18 @@ public class ProfileSettingsDialog extends JDialog {
     }
 
     private void saveProfile() {
-        currentUser .setEmail(emailField.getText().trim());
-        currentUser .setPhoneNumber(phoneField.getText().trim());
-        currentUser .setAddress(addressArea.getText().trim());
+        currentUser.setUsername(usernameField.getText().trim());
+        currentUser.setEmail(emailField.getText().trim());
+        currentUser.setPhoneNumber(phoneField.getText().trim());
+        currentUser.setAddress(addressArea.getText().trim());
+         
+        Date selectedDate = birthdateChooser.getDate();
+        if (selectedDate != null) {
+           LocalDate birthdate = selectedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+           currentUser.setBirthdate(birthdate);
+        } else {
+           currentUser.setBirthdate(null);
+        }
 
         uploadProgressBar.setVisible(true);
         uploadProgressBar.setValue(0);
@@ -296,7 +322,7 @@ public class ProfileSettingsDialog extends JDialog {
                     Thread.sleep(100);
                     publish(i);
                 }
-                return userController.updateProfile(currentUser , selectedImageFile);
+                return userController.updateProfile(currentUser, selectedImageFile);
             }
 
             @Override
@@ -455,16 +481,16 @@ public class ProfileSettingsDialog extends JDialog {
             return;
         }
         // Check if old password matches the current user password
-        User user = userController.login(currentUser .getUsername(), oldPassword);
+        User user = userController.login(currentUser.getUsername(), oldPassword);
         if (user == null) {
             showStatus("Old password incorrect", false);
             return;
         }
         // Implement password reset here
-        boolean passwordChanged = userController.resetPassword(currentUser .getUsername(), newPassword);
+        boolean passwordChanged = userController.resetPassword(currentUser.getUsername(), newPassword);
         if (passwordChanged) {
             showStatus("Password changed successfully", true);
-            dispose();
+             dispose();
             LoginFrame.getMainFrame().dispose();
             new LoginFrame().setVisible(true);
         } else {
@@ -481,11 +507,11 @@ public class ProfileSettingsDialog extends JDialog {
         );
 
         if (response == JOptionPane.YES_OPTION) {
-            if (userController.deleteAccount(currentUser .getId())) {
+            if (userController.deleteAccount(currentUser.getId())) {
                 JOptionPane.showMessageDialog(this, "Account deleted successfully, please log in again");
-                dispose();
+                 dispose();
                 LoginFrame.getMainFrame().dispose();
-                new LoginFrame().setVisible(true);
+                 new LoginFrame().setVisible(true);
             } else {
                 showStatus("Failed to delete account. Please try again", false);
             }
@@ -496,7 +522,7 @@ public class ProfileSettingsDialog extends JDialog {
         SwingWorker<ImageIcon, Void> worker = new SwingWorker<ImageIcon, Void>() {
             @Override
             protected ImageIcon doInBackground() throws Exception {
-                String imagePath = currentUser .getProfileImagePath();
+                String imagePath = currentUser.getProfileImagePath();
                 if (imagePath != null && !imagePath.isEmpty()) {
                     File imageFile = new File(imagePath);
                     if (imageFile.exists() && imageFile.isFile()) {
@@ -547,11 +573,3 @@ public class ProfileSettingsDialog extends JDialog {
         worker.execute();
     }
 }
-
-
-
-
-
-
-
-//// oke

@@ -5,6 +5,7 @@ import java.io.Serializable;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.time.LocalDate;
 
 public class User implements Serializable {
 
@@ -27,6 +28,9 @@ public class User implements Serializable {
     private static final int MAX_IMAGE_HEIGHT = 800;
     private static final long MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
+    //Birthdate
+    private LocalDate birthdate;
+
     // Constructors
     public User() {
         this.isActive = true;
@@ -40,6 +44,16 @@ public class User implements Serializable {
         this.email = email;
         this.phoneNumber = phoneNumber;
     }
+    
+     public User(String username, String password, String email, String phoneNumber, LocalDate birthdate) {
+        this();
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.birthdate = birthdate;
+    }
+
 
     public User(String username, String password, String role) {
         this();
@@ -138,6 +152,11 @@ public class User implements Serializable {
         }
         return profileImage;
     }
+    
+     public LocalDate getBirthdate() {
+        return birthdate;
+    }
+    
 
     // Setters
     public void setId(int id) {
@@ -177,6 +196,10 @@ public class User implements Serializable {
         // Reset cached image when path changes
         this.profileImage = null;
     }
+    
+     public void setBirthdate(LocalDate birthdate) {
+        this.birthdate = birthdate;
+    }
 
     // Validation Methods
     public boolean isValidUsername() {
@@ -211,6 +234,7 @@ public class User implements Serializable {
                 + ", username='" + username + '\''
                 + ", email='" + email + '\''
                 + ", phoneNumber='" + phoneNumber + '\''
+                 + ", birthdate='" + birthdate + '\''
                 + ", role='" + role + '\''
                 + ", isActive=" + isActive
                 + ", hasProfileImage=" + (profileImagePath != null)

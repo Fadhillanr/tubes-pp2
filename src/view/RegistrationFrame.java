@@ -1,11 +1,11 @@
 package view;
 
 import controller.UserController;
-import model.User;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import javax.swing.*;
+import model.User;
 
 public class RegistrationFrame extends JFrame {
 
@@ -16,7 +16,6 @@ public class RegistrationFrame extends JFrame {
     private JTextField emailField;
     private JTextField phoneField;
     private JTextArea addressArea;
-
     private LoginFrame loginForm;
 
     public RegistrationFrame() {
@@ -77,8 +76,7 @@ public class RegistrationFrame extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        // Center the title label and add padding
-        JLabel titleLabel = new JLabel("User  Registration");
+        JLabel titleLabel = new JLabel("User Registration");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
         titleLabel.setForeground(new Color(50, 157, 156)); // #329D9C
         gbc.gridx = 0;
@@ -88,7 +86,7 @@ public class RegistrationFrame extends JFrame {
         mainPanel.add(titleLabel, gbc);
 
         gbc.insets = new Insets(5, 5, 5, 5); // Reset insets for other components
-        gbc.gridwidth = 1; // Reset gridwidth for labels
+        gbc.gridwidth = 1;
 
         // Username
         gbc.gridx = 0;
@@ -97,7 +95,7 @@ public class RegistrationFrame extends JFrame {
         usernameLabel.setFont(new Font("Arial", Font.BOLD, 14));
         usernameLabel.setForeground(new Color(86, 197, 150)); // #56c596
         mainPanel.add(usernameLabel, gbc);
-        
+
         gbc.gridx = 1;
         usernameField = new JTextField(20);
         mainPanel.add(usernameField, gbc);
@@ -109,7 +107,7 @@ public class RegistrationFrame extends JFrame {
         passwordLabel.setFont(new Font("Arial", Font.BOLD, 14));
         passwordLabel.setForeground(new Color(86, 197, 150)); // #56c596
         mainPanel.add(passwordLabel, gbc);
-        
+
         gbc.gridx = 1;
         passwordField = new JPasswordField(20);
         mainPanel.add(passwordField, gbc);
@@ -121,7 +119,7 @@ public class RegistrationFrame extends JFrame {
         confirmPasswordLabel.setFont(new Font("Arial", Font.BOLD, 14));
         confirmPasswordLabel.setForeground(new Color(86, 197, 150)); // #56c596
         mainPanel.add(confirmPasswordLabel, gbc);
-        
+
         gbc.gridx = 1;
         confirmPasswordField = new JPasswordField(20);
         mainPanel.add(confirmPasswordField, gbc);
@@ -133,7 +131,7 @@ public class RegistrationFrame extends JFrame {
         emailLabel.setFont(new Font("Arial", Font.BOLD, 14));
         emailLabel.setForeground(new Color(86, 197, 150)); // #56c596
         mainPanel.add(emailLabel, gbc);
-        
+
         gbc.gridx = 1;
         emailField = new JTextField(20);
         mainPanel.add(emailField, gbc);
@@ -145,7 +143,7 @@ public class RegistrationFrame extends JFrame {
         phoneLabel.setFont(new Font("Arial", Font.BOLD, 14));
         phoneLabel.setForeground(new Color(86, 197, 150)); // #56c596
         mainPanel.add(phoneLabel, gbc);
-        
+
         gbc.gridx = 1;
         phoneField = new JTextField(20);
         mainPanel.add(phoneField, gbc);
@@ -157,29 +155,17 @@ public class RegistrationFrame extends JFrame {
         addressLabel.setFont(new Font("Arial", Font.BOLD, 14));
         addressLabel.setForeground(new Color(86, 197, 150)); // #56c596
         mainPanel.add(addressLabel, gbc);
-        
+
         gbc.gridx = 1;
         addressArea = new JTextArea(3, 20);
         addressArea.setLineWrap(true);
         mainPanel.add(new JScrollPane(addressArea), gbc);
 
-          // Button Panel
+        // Button Panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton registerButton = new JButton("Register");
         JButton cancelButton = new JButton("Cancel");
         JButton loginButton = new JButton("Login");
-
-        // Set font size for buttons
-        Font buttonFont = new Font("Arial", Font.BOLD, 16); // Set font size to 16
-        registerButton.setFont(buttonFont);
-        cancelButton.setFont(buttonFont);
-        loginButton.setFont(buttonFont);
-
-        // Set preferred size for buttons
-        Dimension buttonSize = new Dimension(100, 40); // Set width to 120 and height to 40
-        registerButton.setPreferredSize(buttonSize);
-        cancelButton.setPreferredSize(buttonSize);
-        loginButton.setPreferredSize(buttonSize);
 
         registerButton.addActionListener(e -> handleRegistration());
         cancelButton.addActionListener(e -> handleCancel());
@@ -194,7 +180,6 @@ public class RegistrationFrame extends JFrame {
         gbc.gridwidth = 2;
         mainPanel.add(buttonPanel, gbc);
 
-
         add(mainPanel);
     }
 
@@ -206,17 +191,32 @@ public class RegistrationFrame extends JFrame {
         User user = new User();
         user.setUsername(usernameField.getText().trim());
         user.setPassword(new String(passwordField.getPassword()));
-        user.setEmail(emailField.getText().trim());
+        String email = emailField.getText().trim();
+        if (email.length() > 255) {
+            JOptionPane.showMessageDialog(this,
+                    "Email is too long. Please use a shorter email",
+                    "Validation Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        user.setEmail(email);
         user.setPhoneNumber(phoneField.getText().trim());
         user.setAddress(addressArea.getText().trim());
 
         boolean isRegistered = userController.register(user);
         if (isRegistered) {
-            JOptionPane.showMessageDialog(this,
-                    "Registration successful! Please login.",
-                    "Success",
-                    JOptionPane.INFORMATION_MESSAGE);
-            openLoginFrame();
+            JOptionPane.showMessageDialog(this, "Registration successful!");
+
+            // Open OTP dialog and wait for verification
+            OTPDialog otpDialog = new OTPDialog(this, user.getEmail());
+            otpDialog.setVisible(true);
+
+            if (otpDialog.isVerified()) {
+                JOptionPane.showMessageDialog(this, "Registration successful! Please login.");
+                openLoginFrame();
+            } else {
+                JOptionPane.showMessageDialog(this, "OTP verification failed. Registration canceled");
+            }
         } else {
             JOptionPane.showMessageDialog(this,
                     "Registration failed. Please try again.",
