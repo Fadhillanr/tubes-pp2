@@ -8,13 +8,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import model.User;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
-import model.WasteCategory;
+import model.User;
+import org.mindrot.jbcrypt.BCrypt;
+import java.time.LocalDate;
 
 public class UserController {
 
@@ -116,11 +115,35 @@ public class UserController {
 
         return resizedImage;
     }
+     private String hashPassword(String password) {
+        return BCrypt.hashpw(password, BCrypt.gensalt());
+    }
 
-    // Updated updateProfile method with better error handling
+    private boolean checkPassword(String password, String hashedPassword) {
+         if (hashedPassword == null || hashedPassword.isEmpty() ) {
+             return false;
+         }
+        return BCrypt.checkpw(password, hashedPassword);
+    }
+     // Updated updateProfile method with better error handling
     public boolean updateProfile(User user, File newProfileImage) {
         PreparedStatement pstmt = null;
+        ResultSet rs = null;
         try {
+            // Cek duplikasi username
+            if (!user.getUsername().equals(getCurrentUsername(user.getId()))) {
+                String checkUser = "SELECT username FROM users "
+                        + "WHERE username = ? ";
+                pstmt = conn.prepareStatement(checkUser);
+                pstmt.setString(1, user.getUsername());
+                rs = pstmt.executeQuery();
+
+                if (rs.next()) {
+                    JOptionPane.showMessageDialog(null, "Username already exists!", "Update Error", JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+            }
+
             String imagePath = null;
             if (newProfileImage != null) {
                 try {
@@ -138,16 +161,18 @@ public class UserController {
                 }
             }
 
-            String sql = "UPDATE users SET email = ?, phone_number = ?, address = ?, profile_image_path = ? WHERE id = ?";
+            String sql = "UPDATE users SET username = ?, email = ?, phone_number = ?, address = ?, profile_image_path = ?, birthdate = ? WHERE id = ?";
             pstmt = conn.prepareStatement(sql);
-            pstmt.setString(1, user.getEmail());
-            pstmt.setString(2, user.getPhoneNumber());
-            pstmt.setString(3, user.getAddress());
-            pstmt.setString(4, imagePath != null ? imagePath : user.getProfileImagePath());
-            pstmt.setInt(5, user.getId());
+            pstmt.setString(1, user.getUsername());
+            pstmt.setString(2, user.getEmail());
+            pstmt.setString(3, user.getPhoneNumber());
+            pstmt.setString(4, user.getAddress());
+            pstmt.setString(5, imagePath != null ? imagePath : user.getProfileImagePath());
+            pstmt.setDate(6, user.getBirthdate() != null ? Date.valueOf(user.getBirthdate()) : null);
+            pstmt.setInt(7, user.getId());
 
             int result = pstmt.executeUpdate();
-            conn.commit();
+           
             if (result > 0) {
                 user.setProfileImagePath(imagePath != null ? imagePath : user.getProfileImagePath());
                 return true;
@@ -167,13 +192,95 @@ public class UserController {
             return false;
         } finally {
             try {
+                if (rs != null) {
+                    rs.close();
+                }
                 if (pstmt != null) {
                     pstmt.close();
                 }
+                   conn.setAutoCommit(true);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+     private String getCurrentUsername(int userId) {
+     PreparedStatement pstmt = null;
+     ResultSet rs = null;
+     String username = null;
+     try {
+         String sql = "SELECT username FROM users WHERE id = ?";
+         pstmt = conn.prepareStatement(sql);
+         pstmt.setInt(1, userId);
+         rs = pstmt.executeQuery();
+         if (rs.next()) {
+            username = rs.getString("username");
+         }
+         return username;
+     } catch (SQLException e) {
+         e.printStackTrace();
+         return null;
+     } finally {
+          try {
+             if (rs != null) {
+                 rs.close();
+             }
+             if (pstmt != null) {
+                 pstmt.close();
+             }
+         } catch (SQLException e) {
+             e.printStackTrace();
+         }
+     }
+ }
+
+     public boolean resetPassword(String username, String newPassword) {
+        PreparedStatement pstmt = null;
+        try {
+            // Pertama cek apakah username ada
+            String checkSql = "SELECT id FROM users WHERE username = ?";
+            pstmt = conn.prepareStatement(checkSql);
+            pstmt.setString(1, username);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (!rs.next()) {
+                return false; // Username tidak ditemukan
+            }
+
+            // Update password
+            String updateSql = "UPDATE users SET password = ? WHERE username = ?";
+            pstmt = conn.prepareStatement(updateSql);
+            pstmt.setString(1, hashPassword(newPassword)); // Idealnya password harus di-hash
+            pstmt.setString(2, username);
+            int result = pstmt.executeUpdate();
+          
+            if (result > 0) {
+                return true;
+            } else {
+                return false;
+            }
+
+        } catch (SQLException e) {
+              try {
                 if (conn != null) {
-                    conn.setAutoCommit(true);
-                    conn.close();
+                    conn.rollback();
                 }
+            } catch (SQLException ex) {
+                e.printStackTrace();
+            }
+             e.printStackTrace();
+            JOptionPane.showMessageDialog(null,
+                    "Database error during reset password: " + e.getMessage(),
+                    "Reset Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return false;
+        } finally {
+            try {
+                if (pstmt != null) {
+                    pstmt.close();
+                }
+                conn.setAutoCommit(true);
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -185,11 +292,9 @@ public class UserController {
         ResultSet rs = null;
 
         try {
-            String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
+            String sql = "SELECT * FROM users WHERE username = ?";
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, username);
-            pstmt.setString(2, password); // Idealnya password harus dicocokkan dengan hash
-
             rs = pstmt.executeQuery();
 
             if (rs.next()) {
@@ -201,8 +306,14 @@ public class UserController {
                 user.setAddress(rs.getString("address"));
                 user.setProfileImagePath(rs.getString("profile_image_path"));
                 user.setRole(rs.getString("role"));
-                // Jangan set password untuk keamanan
-                return user;
+                Date birthdate = rs.getDate("birthdate");
+                if (birthdate != null) {
+                   user.setBirthdate(birthdate.toLocalDate());
+                }
+                 // Password yang di database adalah hasil dari hash
+                 if (checkPassword(password, rs.getString("password"))) {
+                    return user; // Cocok
+                }
             }
             return null; // Return null jika login gagal
 
@@ -261,20 +372,22 @@ public class UserController {
             }
 
             // Insert new user
-            String sql = "INSERT INTO users (username, password, email, phone_number, address, role, is_active) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO users (username, password, email, phone_number, address, role, is_active, birthdate) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             pstmt = conn.prepareStatement(sql);
 
             pstmt.setString(1, user.getUsername());
-            pstmt.setString(2, user.getPassword());
+             pstmt.setString(2, hashPassword(user.getPassword()));
             pstmt.setString(3, user.getEmail());
             pstmt.setString(4, user.getPhoneNumber());
             pstmt.setString(5, user.getAddress());
             pstmt.setString(6, user.getRole());
             pstmt.setBoolean(7, user.isActive());
+             pstmt.setDate(8, user.getBirthdate() != null ? Date.valueOf(user.getBirthdate()) : null);
+
 
             int result = pstmt.executeUpdate();
-            conn.commit();
+             conn.commit();
             if (result > 0) {
                 JOptionPane.showMessageDialog(null,
                         "Registration successful!",
@@ -313,46 +426,6 @@ public class UserController {
         }
     }
 
-    public boolean resetPassword(String username, String newPassword) {
-        PreparedStatement pstmt = null;
-        try {
-            // Pertama cek apakah username ada
-            String checkSql = "SELECT id FROM users WHERE username = ?";
-            pstmt = conn.prepareStatement(checkSql);
-            pstmt.setString(1, username);
-            ResultSet rs = pstmt.executeQuery();
-
-            if (!rs.next()) {
-                return false; // Username tidak ditemukan
-            }
-
-            // Update password
-            String updateSql = "UPDATE users SET password = ? WHERE username = ?";
-            pstmt = conn.prepareStatement(updateSql);
-            pstmt.setString(1, newPassword); // Idealnya password harus di-hash
-            pstmt.setString(2, username);
-            int result = pstmt.executeUpdate();
-            conn.commit();
-            if (result > 0) {
-                return true;
-            } else {
-                return false;
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            try {
-                if (pstmt != null) {
-                    pstmt.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     public boolean deleteAccount(int userId) {
         PreparedStatement pstmt = null;
         try {
@@ -374,6 +447,7 @@ public class UserController {
                 if (pstmt != null) {
                     pstmt.close();
                 }
+                 conn.setAutoCommit(true);
             } catch (SQLException e) {
                 e.printStackTrace();
             }
