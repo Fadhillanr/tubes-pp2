@@ -37,6 +37,7 @@ public class MainFrame extends JFrame {
     private static final Color BUTTON_TEXT_COLOR = new Color(50, 50, 50);
     private static final Font TABLE_FONT = new Font("Arial", Font.PLAIN, 14);
     private static final Font FOOTER_FONT = new Font("Arial", Font.PLAIN, 12);
+      private  JButton viewWasteButton;
 
 
     public MainFrame(User user) {
@@ -155,18 +156,12 @@ public class MainFrame extends JFrame {
         typesButton.addActionListener(e -> openWasteTypes());
         dashboardPanel.add(typesButton, gbc);
 
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.gridwidth = 2;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        JButton viewWasteButton = createDashboardButton("View Total Waste");
-        viewWasteButton.addActionListener(e -> displayWasteTable());
-        dashboardPanel.add(viewWasteButton, gbc);
+
         return dashboardPanel;
     }
     
     private JPanel createUserDashboard() {
-        JPanel dashboardPanel = new JPanel(new GridBagLayout());
+         JPanel dashboardPanel = new JPanel(new GridBagLayout());
         dashboardPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         dashboardPanel.setBackground(BACKGROUND_COLOR);
 
@@ -174,38 +169,21 @@ public class MainFrame extends JFrame {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.weightx = 1.0;
-        gbc.weighty = 1.0;
-        gbc.fill = GridBagConstraints.BOTH;
-
-        // Table
-        String[] columns = {"Category", "Name", "Weight", "Unit"};
-        tableModel = new DefaultTableModel(columns, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-
-        wasteTable = new JTable(tableModel);
-        customizeTableAppearance(wasteTable);
-        scrollPane = new JScrollPane(wasteTable);
-        dashboardPanel.add(scrollPane, gbc);
-        loadTotalWasteTable(tableModel);
-
-        // Summary Panel
-        JPanel summaryPanel = createSummaryPanel();
-        gbc.gridx = 0;
-        gbc.gridy = 1;
+        gbc.weightx = 0;
         gbc.weighty = 0;
-        dashboardPanel.add(summaryPanel, gbc);
+         gbc.anchor = GridBagConstraints.CENTER;
+        gbc.fill = GridBagConstraints.NONE;
+
+         viewWasteButton = createDashboardButton("View Total Waste");
+        viewWasteButton.addActionListener(e -> displayWasteTable());
+        dashboardPanel.add(viewWasteButton, gbc);
 
         return dashboardPanel;
     }
 
 
     private void displayWasteTable() {
-       if (dashboardPanel != null) {
+         if (dashboardPanel != null) {
             dashboardPanel.removeAll();
 
             // GridBagConstraints untuk mengatur layout
@@ -218,7 +196,7 @@ public class MainFrame extends JFrame {
             gbc.fill = GridBagConstraints.BOTH;
 
            // Table
-           String[] columns = {"Category", "Name", "Weight", "Unit"};
+           String[] columns = {"Category", "Name", "Description", "Weight", "Unit"};
             tableModel = new DefaultTableModel(columns, 0) {
                 @Override
                 public boolean isCellEditable(int row, int column) {
@@ -238,6 +216,32 @@ public class MainFrame extends JFrame {
             gbc.gridy = 1;
             gbc.weighty = 0;
             dashboardPanel.add(summaryPanel, gbc);
+
+            // Button Kembali
+           JButton backButton = createDashboardButton("Back to Dashboard");
+           backButton.addActionListener(e -> {
+                dashboardPanel.removeAll();
+                 dashboardPanel.setLayout(new GridBagLayout());
+                GridBagConstraints backGbc = new GridBagConstraints();
+                backGbc.gridx = 0;
+                backGbc.gridy = 0;
+                backGbc.insets = new Insets(5, 5, 5, 5);
+                backGbc.weightx = 0;
+                backGbc.weighty = 0;
+                backGbc.anchor = GridBagConstraints.CENTER;
+                 backGbc.fill = GridBagConstraints.NONE;
+
+                  viewWasteButton = createDashboardButton("View Total Waste");
+                   viewWasteButton.addActionListener(ev -> displayWasteTable());
+                   dashboardPanel.add(viewWasteButton, backGbc);
+
+                dashboardPanel.revalidate();
+                dashboardPanel.repaint();
+            });
+
+             gbc.gridy = 2;
+            gbc.weighty = 0;
+           dashboardPanel.add(backButton, gbc);
 
             dashboardPanel.revalidate();
             dashboardPanel.repaint();
@@ -314,6 +318,7 @@ public class MainFrame extends JFrame {
                     Object[] row = {
                         categoryName,
                         type.getName(),
+                        type.getDescription(),
                         type.getWeight(),
                         type.getUnit()
                     };
@@ -350,15 +355,14 @@ public class MainFrame extends JFrame {
         return typesPerCategory;
     }
 
-    private JButton createDashboardButton(String text) {
+     private JButton createDashboardButton(String text) {
         JButton button = new JButton(text);
         button.setFont(new Font("Arial", Font.PLAIN, 14));
         button.setBackground(PRIMARY_COLOR);
-        button.setForeground(BUTTON_TEXT_COLOR); // Ensure text color is dark gray
-        button.setPreferredSize(new Dimension(150, 40)); // Set preferred size
+        button.setForeground(BUTTON_TEXT_COLOR);
+        button.setPreferredSize(new Dimension(160, 40));
         return button;
     }
-
 
     private ImageIcon loadIcon(String iconPath) {
         try {
@@ -376,14 +380,29 @@ public class MainFrame extends JFrame {
         }
     }
 
-    private void openSettings() {
+  private void openSettings() {
         if (currentUser != null) {
-            ProfileSettingsDialog settingsDialog = new ProfileSettingsDialog(this, currentUser);
+           ProfileSettingsDialog settingsDialog = new ProfileSettingsDialog(this, currentUser);
             settingsDialog.setVisible(true);
-        } else {
-            JOptionPane.showMessageDialog(this, "You are not Logged In!", "Error", JOptionPane.ERROR_MESSAGE);
-        }
+
+            // Refresh dashboard after settings dialog is closed
+            settingsDialog.addWindowListener(new java.awt.event.WindowAdapter() {
+                @Override
+                public void windowClosed(java.awt.event.WindowEvent windowEvent) {
+                  if (settingsDialog.isUpdated()) {
+                      currentUser = settingsDialog.getUpdatedUser();
+                    contentPanel.remove(dashboardPanel);
+                     dashboardPanel = createDashboardPanel();
+                       contentPanel.add(dashboardPanel, BorderLayout.CENTER);
+                     SwingUtilities.updateComponentTreeUI(contentPanel);
+                    }
+               }
+           });
+       } else {
+           JOptionPane.showMessageDialog(this, "You are not Logged In!", "Error", JOptionPane.ERROR_MESSAGE);
+       }
     }
+
 
     private void openWasteCategories() {
         WasteCategoryFrame categoryFrame = new WasteCategoryFrame();

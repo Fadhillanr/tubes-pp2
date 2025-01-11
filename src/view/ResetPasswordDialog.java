@@ -1,25 +1,29 @@
 package view;
 
 import controller.UserController;
-import javax.swing.*;
 import java.awt.*;
+import javax.swing.*;
 
 public class ResetPasswordDialog extends JDialog {
 
     private UserController userController;
     private JPasswordField passwordField;
     private JPasswordField confirmPasswordField;
+    private String username;
+
 
     // Warna yang konsisten
     private static final Color PRIMARY_COLOR = new Color(50, 157, 156); // #329D9C
     private static final Color BACKGROUND_COLOR = new Color(207, 244, 210); // #CFF4D2
     private static final Color BUTTON_TEXT_COLOR = new Color(50, 50, 50); // Dark gray for button text
     private static final Font LABEL_FONT = new Font("Arial", Font.BOLD, 14); // Font untuk label
+    private static final Color ERROR_COLOR = new Color(220, 53, 69);
+    private static final Color SUCCESS_COLOR = new Color(40, 167, 69);
 
-
-    public ResetPasswordDialog(JFrame parent) {
+    public ResetPasswordDialog(JFrame parent, String username) {
         super(parent, "Reset Password", true);
         this.userController = new UserController();
+        this.username = username;
         initComponents();
     }
 
@@ -27,7 +31,7 @@ public class ResetPasswordDialog extends JDialog {
     private void initComponents() {
         setSize(400, 250);
         setLocationRelativeTo(getOwner());
-        getContentPane().setBackground(BACKGROUND_COLOR); //set background
+         getContentPane().setBackground(BACKGROUND_COLOR); //set background
 
         JPanel mainPanel = new JPanel(new GridBagLayout());
          mainPanel.setBackground(BACKGROUND_COLOR); //set background for panel
@@ -95,28 +99,34 @@ public class ResetPasswordDialog extends JDialog {
         String confirmPassword = new String(confirmPasswordField.getPassword());
 
         if (newPassword.isEmpty() || confirmPassword.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please fill all fields");
+            showStatus("Please fill all fields", false);
              return;
        }
 
 
        if (!newPassword.equals(confirmPassword)) {
-          JOptionPane.showMessageDialog(this, "Passwords do not match");
+          showStatus("Passwords do not match", false);
           return;
       }
 
 
         if (newPassword.length() < 8) {
-            JOptionPane.showMessageDialog(this, "Password must be at least 8 characters");
+           showStatus("Password must be at least 8 characters", false);
             return;
         }
 
-        LoginFrame loginFrame = (LoginFrame) getOwner();
-        if (userController.resetPassword(loginFrame.usernameField.getText().trim(), newPassword)) {
-            JOptionPane.showMessageDialog(this, "Password reset successfully, please log in again");
-            dispose();
+       if (userController.resetPassword(username, newPassword)) {
+            showStatus("Password reset successfully, please log in again", true);
+           dispose();
+           new LoginFrame().setVisible(true);
         } else {
-           JOptionPane.showMessageDialog(this, "Failed to reset password");
+           showStatus("Failed to reset password", false);
         }
+    }
+    private void showStatus(String message, boolean success) {
+        JLabel statusLabel = new JLabel(message);
+       statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        statusLabel.setForeground(success ? SUCCESS_COLOR : ERROR_COLOR);
+        JOptionPane.showMessageDialog(this, statusLabel);
     }
 }

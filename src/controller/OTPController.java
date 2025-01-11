@@ -1,12 +1,9 @@
 package controller;
 
-import model.OTPRecord;
 import java.sql.*;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Random;
-import javax.swing.JOptionPane;
+import model.OTPRecord;
 
 public class OTPController {
 
@@ -48,7 +45,6 @@ public class OTPController {
             pstmt.setString(2, otpRecord.getOtpCode());
              pstmt.setTimestamp(3, expiredAtTimestamp);
             int result = pstmt.executeUpdate();
-            conn.commit(); // Commit after insert
             if (result > 0) {
                 return true;
             } else {
@@ -65,6 +61,7 @@ public class OTPController {
                 if (pstmt != null) {
                     pstmt.close();
                 }
+                conn.setAutoCommit(true);
             } catch (SQLException e) {
                 System.err.println("SQL Error: " + e.getMessage());
                 e.printStackTrace();
@@ -118,7 +115,6 @@ public class OTPController {
             pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, id);
             int result = pstmt.executeUpdate();
-            conn.commit(); // Commit after update
             return result > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -128,6 +124,7 @@ public class OTPController {
                 if (pstmt != null) {
                     pstmt.close();
                 }
+                  conn.setAutoCommit(true);
             } catch (SQLException e) {
                 e.printStackTrace();
             }

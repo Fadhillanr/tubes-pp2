@@ -1,10 +1,10 @@
 package view;
 
 import controller.UserController;
-import model.User;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import javax.swing.*;
+import model.User;
 
 public class LoginFrame extends JFrame {
 
@@ -192,10 +192,11 @@ public class LoginFrame extends JFrame {
         new RegistrationFrame().setVisible(true);
     }
 
-    private void openResetPasswordDialog() {
-        ResetPasswordDialog resetDialog = new ResetPasswordDialog(this);
+   private void openResetPasswordDialog() {
+        ResetPasswordDialog resetDialog = new ResetPasswordDialog(this, usernameField.getText().trim());
         resetDialog.setVisible(true);
     }
+
 
     private void openMainFrame(User user) {
         if (mainFrame != null) {
