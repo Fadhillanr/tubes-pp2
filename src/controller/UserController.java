@@ -12,7 +12,6 @@ import java.sql.*;
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 import model.User;
-import java.time.LocalDate;
 
 public class UserController {
 
@@ -116,88 +115,84 @@ public class UserController {
     }
 
     // Updated updateProfile method with better error handling
-    public boolean updateProfile(User user, File newProfileImage) {
-     PreparedStatement pstmt = null;
-     ResultSet rs = null;
-     try {
-        
-         // Cek duplikasi username
-         if (!user.getUsername().equals(getCurrentUsername(user.getId()))){
-         String checkUser = "SELECT username FROM users "
-                 + "WHERE username = ? ";
-         pstmt = conn.prepareStatement(checkUser);
-         pstmt.setString(1, user.getUsername());
-          rs = pstmt.executeQuery();
+   public boolean updateProfile(User user, File newProfileImage) {
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            // Cek duplikasi username
+            if (!user.getUsername().equals(getCurrentUsername(user.getId()))) {
+                String checkUser = "SELECT username FROM users "
+                        + "WHERE username = ? ";
+                pstmt = conn.prepareStatement(checkUser);
+                pstmt.setString(1, user.getUsername());
+                rs = pstmt.executeQuery();
 
-         if (rs.next()) {
-             JOptionPane.showMessageDialog(null, "Username already exists!", "Update Error", JOptionPane.ERROR_MESSAGE);
-             return false;
-         }
+                if (rs.next()) {
+                    JOptionPane.showMessageDialog(null, "Username already exists!", "Update Error", JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+            }
+
+            String imagePath = null;
+            if (newProfileImage != null) {
+                try {
+                    imagePath = saveProfileImage(newProfileImage, user.getId());
+
+                    // Delete old profile image if it exists
+                    if (user.getProfileImagePath() != null) {
+                        File oldImage = new File(user.getProfileImagePath());
+                        if (oldImage.exists() && oldImage.isFile()) {
+                            oldImage.delete();
+                        }
+                    }
+                } catch (IOException e) {
+                    throw new SQLException("Failed to process profile image: " + e.getMessage());
+                }
+            }
+
+            String sql = "UPDATE users SET username = ?, email = ?, phone_number = ?, address = ?, profile_image_path = ?, birthdate = ? WHERE id = ?";
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, user.getUsername());
+            pstmt.setString(2, user.getEmail());
+            pstmt.setString(3, user.getPhoneNumber());
+            pstmt.setString(4, user.getAddress());
+            pstmt.setString(5, imagePath != null ? imagePath : user.getProfileImagePath());
+            pstmt.setDate(6, user.getBirthdate() != null ? Date.valueOf(user.getBirthdate()) : null);
+            pstmt.setInt(7, user.getId());
+
+            int result = pstmt.executeUpdate();
+            conn.commit();
+            if (result > 0) {
+                user.setProfileImagePath(imagePath != null ? imagePath : user.getProfileImagePath());
+                return true;
+            }
+            return false;
+
+        } catch (SQLException e) {
+            try {
+                if (conn != null) {
+                    conn.rollback();
+                }
+            } catch (SQLException ex) {
+                e.printStackTrace();
+            }
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Failed to update profile: " + e.getMessage());
+            return false;
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (pstmt != null) {
+                    pstmt.close();
+                }
+                   conn.setAutoCommit(true);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
-
-         String imagePath = null;
-         if (newProfileImage != null) {
-             try {
-                 imagePath = saveProfileImage(newProfileImage, user.getId());
-
-                 // Delete old profile image if it exists
-                 if (user.getProfileImagePath() != null) {
-                     File oldImage = new File(user.getProfileImagePath());
-                     if (oldImage.exists() && oldImage.isFile()) {
-                         oldImage.delete();
-                     }
-                 }
-             } catch (IOException e) {
-                 throw new SQLException("Failed to process profile image: " + e.getMessage());
-             }
-         }
-
-          String sql = "UPDATE users SET username = ?, email = ?, phone_number = ?, address = ?, profile_image_path = ?, birthdate = ? WHERE id = ?";
-         pstmt = conn.prepareStatement(sql);
-         pstmt.setString(1, user.getUsername());
-         pstmt.setString(2, user.getEmail());
-         pstmt.setString(3, user.getPhoneNumber());
-         pstmt.setString(4, user.getAddress());
-         pstmt.setString(5, imagePath != null ? imagePath : user.getProfileImagePath());
-         pstmt.setDate(6, user.getBirthdate() != null ? Date.valueOf(user.getBirthdate()) : null);
-         pstmt.setInt(7, user.getId());
-
-         int result = pstmt.executeUpdate();
-         conn.commit();
-         if (result > 0) {
-             user.setProfileImagePath(imagePath != null ? imagePath : user.getProfileImagePath());
-             return true;
-         }
-         return false;
-
-     } catch (SQLException e) {
-         try {
-             if (conn != null) {
-                 conn.rollback();
-             }
-         } catch (SQLException ex) {
-             e.printStackTrace();
-         }
-         e.printStackTrace();
-         JOptionPane.showMessageDialog(null, "Failed to update profile: " + e.getMessage());
-         return false;
-     } finally {
-           try {
-             if (rs != null) {
-                 rs.close();
-             }
-             if (pstmt != null) {
-                 pstmt.close();
-             }
-              if (conn != null) {
-                 conn.setAutoCommit(true);
-                 conn.close();
-             }
-         } catch (SQLException e) {
-             e.printStackTrace();
-         }
-     }
- }
+    }
 
  private String getCurrentUsername(int userId) {
      PreparedStatement pstmt = null;
@@ -228,6 +223,57 @@ public class UserController {
          }
      }
  }
+
+     public boolean resetPassword(String username, String newPassword) {
+        PreparedStatement pstmt = null;
+        try {
+            // Pertama cek apakah username ada
+            String checkSql = "SELECT id FROM users WHERE username = ?";
+            pstmt = conn.prepareStatement(checkSql);
+            pstmt.setString(1, username);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (!rs.next()) {
+                return false; // Username tidak ditemukan
+            }
+
+            // Update password
+            String updateSql = "UPDATE users SET password = ? WHERE username = ?";
+            pstmt = conn.prepareStatement(updateSql);
+            pstmt.setString(1, newPassword); // Idealnya password harus di-hash
+            pstmt.setString(2, username);
+            int result = pstmt.executeUpdate();
+              if (result > 0) {
+                return true;
+            } else {
+                return false;
+            }
+
+        } catch (SQLException e) {
+              try {
+              if (conn != null){
+                  conn.rollback();
+                }
+            } catch (SQLException ex) {
+                e.printStackTrace();
+            }
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null,
+                    "Database error during reset password: " + e.getMessage(),
+                    "Reset Error",
+                    JOptionPane.ERROR_MESSAGE);
+           return false;
+        } finally {
+             try {
+                if (pstmt != null) {
+                    pstmt.close();
+                }
+                 conn.setAutoCommit(true);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     public User login(String username, String password) {
         PreparedStatement pstmt = null;
@@ -359,46 +405,6 @@ public class UserController {
                 if (rs != null) {
                     rs.close();
                 }
-                if (pstmt != null) {
-                    pstmt.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public boolean resetPassword(String username, String newPassword) {
-        PreparedStatement pstmt = null;
-        try {
-            // Pertama cek apakah username ada
-            String checkSql = "SELECT id FROM users WHERE username = ?";
-            pstmt = conn.prepareStatement(checkSql);
-            pstmt.setString(1, username);
-            ResultSet rs = pstmt.executeQuery();
-
-            if (!rs.next()) {
-                return false; // Username tidak ditemukan
-            }
-
-            // Update password
-            String updateSql = "UPDATE users SET password = ? WHERE username = ?";
-            pstmt = conn.prepareStatement(updateSql);
-            pstmt.setString(1, newPassword); // Idealnya password harus di-hash
-            pstmt.setString(2, username);
-            int result = pstmt.executeUpdate();
-            conn.commit();
-            if (result > 0) {
-                return true;
-            } else {
-                return false;
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            try {
                 if (pstmt != null) {
                     pstmt.close();
                 }

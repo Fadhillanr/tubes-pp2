@@ -44,6 +44,8 @@ public class ProfileSettingsDialog extends JDialog {
     private JPasswordField newPasswordField;
     private JPasswordField confirmPasswordField;
      private JDateChooser birthdateChooser;
+       private boolean isUpdated = false;
+    private User updatedUser;
 
     public ProfileSettingsDialog(JFrame parent, User user) {
         super(parent, "Profile Settings", true);
@@ -51,6 +53,14 @@ public class ProfileSettingsDialog extends JDialog {
         this.currentUser = user;
         initComponents();
         loadProfileImage();
+    }
+
+     public boolean isUpdated() {
+        return isUpdated;
+    }
+
+      public User getUpdatedUser() {
+        return updatedUser;
     }
 
     private void initComponents() {
@@ -298,12 +308,12 @@ public class ProfileSettingsDialog extends JDialog {
         }
     }
 
-    private void saveProfile() {
+   private void saveProfile() {
         currentUser.setUsername(usernameField.getText().trim());
         currentUser.setEmail(emailField.getText().trim());
         currentUser.setPhoneNumber(phoneField.getText().trim());
         currentUser.setAddress(addressArea.getText().trim());
-         
+
         Date selectedDate = birthdateChooser.getDate();
         if (selectedDate != null) {
            LocalDate birthdate = selectedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
@@ -322,7 +332,11 @@ public class ProfileSettingsDialog extends JDialog {
                     Thread.sleep(100);
                     publish(i);
                 }
-                return userController.updateProfile(currentUser, selectedImageFile);
+              boolean result =  userController.updateProfile(currentUser, selectedImageFile);
+                if (result) {
+                   updatedUser = userController.login(currentUser.getUsername(), new String(oldPasswordField.getPassword()));
+                }
+                return result;
             }
 
             @Override
@@ -334,14 +348,17 @@ public class ProfileSettingsDialog extends JDialog {
             protected void done() {
                 try {
                     boolean success = get();
-                    if (success) {
+                     if (success) {
                         showStatus("Profile updated successfully", true);
                         selectedImageFile = null;
+                         isUpdated = true;
                     } else {
                         showStatus("Failed to update profile", false);
+                           isUpdated = false;
                     }
                 } catch (Exception e) {
                     showStatus("Error: " + e.getMessage(), false);
+                      isUpdated = false;
                 }
                 uploadProgressBar.setVisible(false);
             }
@@ -349,6 +366,7 @@ public class ProfileSettingsDialog extends JDialog {
 
         worker.execute();
     }
+
 
     private void showStatus(String message, boolean success) {
         statusLabel.setText(message);
@@ -377,7 +395,7 @@ public class ProfileSettingsDialog extends JDialog {
 
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 button.setBackground(BUTTON_COLOR);
-                button.setBorder(new CompoundBorder(
+                 button.setBorder(new CompoundBorder(
                         new LineBorder(Color.GRAY, 1),
                         new EmptyBorder(8, 15, 8, 15)
                 ));
@@ -416,7 +434,7 @@ public class ProfileSettingsDialog extends JDialog {
         // Old Password
         JLabel oldPassLabel = new JLabel("Old Password:");
         oldPassLabel.setFont(new Font("Arial", Font.BOLD, 14));
- oldPassLabel.setForeground(new Color(86, 197, 150)); // #56c596
+        oldPassLabel.setForeground(new Color(86, 197, 150)); // #56c596
         gbc.gridx = 0;
         gbc.gridy = 0;
         panel.add(oldPassLabel, gbc);
@@ -463,7 +481,7 @@ public class ProfileSettingsDialog extends JDialog {
         return panel;
     }
 
-    private void handleChangePassword() {
+  private void handleChangePassword() {
         String oldPassword = new String(oldPasswordField.getPassword());
         String newPassword = new String(newPasswordField.getPassword());
         String confirmPassword = new String(confirmPasswordField.getPassword());
@@ -489,12 +507,15 @@ public class ProfileSettingsDialog extends JDialog {
         // Implement password reset here
         boolean passwordChanged = userController.resetPassword(currentUser.getUsername(), newPassword);
         if (passwordChanged) {
-            showStatus("Password changed successfully", true);
-             dispose();
-            LoginFrame.getMainFrame().dispose();
-            new LoginFrame().setVisible(true);
+             JOptionPane.showMessageDialog(this, "Password changed successfully, please log in again", "Success", JOptionPane.INFORMATION_MESSAGE);
+               isUpdated = true;
+                dispose();
+              LoginFrame.getMainFrame().dispose();
+              new LoginFrame().setVisible(true);
+
         } else {
             showStatus("Failed to change password. Please try again", false);
+            isUpdated = false;
         }
     }
 
